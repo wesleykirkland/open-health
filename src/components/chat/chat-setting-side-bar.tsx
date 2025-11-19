@@ -15,11 +15,11 @@ import {ConditionalDeploymentEnv} from "@/components/common/deployment-env";
 import {useTranslations} from "next-intl";
 
 interface ChatSettingSideBarProps {
-    isRightSidebarOpen: boolean;
-    chatRoomId: string;
+    readonly isRightSidebarOpen: boolean;
+    readonly chatRoomId: string;
 }
 
-export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: ChatSettingSideBarProps
+export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Readonly<ChatSettingSideBarProps>
 ) {
     const t = useTranslations('ChatSettingSideBar')
 
@@ -49,6 +49,7 @@ export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Cha
         onChangeChatRoom({
             llmProviderModelId: selectedLLMProviderModel?.id
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedLLMProviderModel]);
 
     // Initialize assistant mode from localStorage or chatRoomData
@@ -57,7 +58,7 @@ export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Cha
 
         // If no saved prompt, use the current one and save it
         setSelectedAssistantMode(chatRoomData.chatRoom.assistantMode);
-    }, [chatRoomData?.chatRoom.assistantMode?.id]);
+    }, [chatRoomData?.chatRoom.assistantMode]);
 
     useEffect(() => {
         const chatRoom = chatRoomData?.chatRoom;
@@ -73,7 +74,8 @@ export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Cha
         if (selectedLLMProviderModel === undefined && models.length > 0) {
             setSelectedLLMProviderModel(models.find((model) => model.id === chatRoom.llmProviderModelId) || models[0]);
         }
-    }, [chatRoomData, llmProvidersData, llmProviderModels]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chatRoomData?.chatRoom, llmProvidersData?.llmProviders, llmProviderModels]);
 
     const {
         data: assistantModesData,
@@ -194,7 +196,7 @@ export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Cha
                             <SelectTrigger>
                                 <SelectValue placeholder={t('selectCompany')}/>
                             </SelectTrigger>
-                            <SelectContent className={cn('bg-white')}>
+                            <SelectContent className={cn('bg-white max-h-64 overflow-y-auto')}>
                                 {llmProvidersData?.llmProviders.map((provider) => <SelectItem
                                     key={provider.id}
                                     value={provider.id}>{provider.name}</SelectItem>)}
@@ -205,7 +207,7 @@ export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Cha
                             <SelectTrigger>
                                 <SelectValue placeholder={t('selectModel')}/>
                             </SelectTrigger>
-                            <SelectContent className={cn('bg-white')}>
+                            <SelectContent className={cn('bg-white max-h-64 overflow-y-auto')}>
                                 {llmProviderModels.map((model) => (
                                     <SelectItem key={model.id} value={model.id}>
                                         {model.name}
@@ -227,7 +229,7 @@ export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Cha
                                     onChange={(e) => onLLMProviderChange({apiURL: e.target.value})}
                                 />
                             )}
-                            {selectedLLMProvider?.providerId !== 'ollama' && (
+                            {selectedLLMProvider?.providerId !== 'ollama' && selectedLLMProvider?.apiKeyRequired && (
                                 <div className="relative">
                                     <Input
                                         type={showApiKey ? "text" : "password"}
@@ -242,6 +244,11 @@ export default function ChatSettingSideBar({isRightSidebarOpen, chatRoomId}: Cha
                                     >
                                         {showApiKey ? t('hide') : t('show')}
                                     </button>
+                                </div>
+                            )}
+                            {selectedLLMProvider?.providerId !== 'ollama' && !selectedLLMProvider?.apiKeyRequired && (
+                                <div className="p-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">
+                                    {t('apiKeyConfigured')}
                                 </div>
                             )}
                         </ConditionalDeploymentEnv>
